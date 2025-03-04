@@ -1,0 +1,48 @@
+syntax = "proto3";
+
+package clientapi;
+
+service ClientAPI {
+  rpc Write (WriteMessage) returns (WriteReply) {}
+  rpc Read (ReadMessage) returns (ReadReply) {}
+}
+
+message WriteMessage {
+  Transaction transaction = 1;
+}
+
+message WriteReply {
+  bool success = 1;
+}
+
+message ReadMessage {}
+
+message ReadReply {
+  PodData pod_data = 1;
+}
+
+message Transaction {
+  bytes data = 1;
+}
+
+message Vote {
+  uint64 replica_id = 1;
+  uint64 timestamp = 2;
+  int64 sequence_number = 3;
+  bytes signature = 4;
+  Transaction transaction = 5;
+}
+
+message TxRecord {
+  Transaction transaction = 1;
+  uint64 rmin = 2;
+  uint64 rmax = 3;
+  optional uint64 rconf = 4;
+  repeated Vote ctx = 5;
+}
+
+message PodData {
+  repeated TxRecord t = 1;
+  uint64 rperf = 2;
+  repeated Vote cpp = 3;
+}
