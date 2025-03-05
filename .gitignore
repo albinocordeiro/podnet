@@ -1,1 +1,11 @@
 /target
+
+/private_keys.json
+/replicas_config.json
+/replica_wal
+/venv
+/replica_wal_*
+/client_*.log
+/replica_*.log
+
+

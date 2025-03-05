@@ -1,10 +1,9 @@
 use std::fs::File;
 use std::io::{BufRead, Write};
 use std::path::Path;
-use std::process::{Command, Child};
+use std::process::Command;
 use std::thread;
 use std::time::Duration;
-use std::io::Read;
 
 use tempfile::TempDir;
 use tracing::info;

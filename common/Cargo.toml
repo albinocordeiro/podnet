@@ -1,0 +1,17 @@
+[package]
+name = "common"
+version = "0.1.0"
+edition = "2024"
+
+[[bin]]
+name = "generate_replica_config"
+path = "src/bin/generate_replica_config.rs"
+
+[dependencies]
+clap = { workspace = true }
+ed25519-dalek = { workspace = true }
+hex =  { workspace = true }
+rand = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+url = { workspace = true }

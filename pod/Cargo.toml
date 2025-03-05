@@ -4,5 +4,35 @@ version = "0.1.0"
 authors = ["Albino Cordeiro <albino@intuitionlogic.com>"]
 edition = "2024"
 
+[lib]
+name = "podlib"
+path = "src/lib.rs"
+
+[[bin]]
+name = "replica"
+path = "src/bin/replica.rs"
+
 [dependencies]
-# Add your dependencies here
+serde = { workspace = true }
+serde_json = { workspace = true }
+tokio = { workspace = true }
+clap = { workspace = true }
+anyhow = { workspace = true }
+hex = { workspace = true }
+tempfile = { workspace = true }
+rand = { workspace = true }
+ed25519-dalek = { workspace = true }
+tokio-tungstenite = { workspace = true }
+tungstenite = { workspace = true }
+futures-util = { workspace = true }
+futures = { workspace = true }
+url = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+tonic = { workspace = true }
+prost = { workspace = true }
+memmap2 = { workspace = true }
+chrono = { workspace = true }
+
+[build-dependencies]
+tonic-build = { workspace = true }

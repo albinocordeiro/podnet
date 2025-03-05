@@ -28,7 +28,7 @@ message Transaction {
 message Vote {
   uint64 replica_id = 1;
   uint64 timestamp = 2;
-  int64 sequence_number = 3;
+  uint64 sequence_number = 3;
   bytes signature = 4;
   Transaction transaction = 5;
 }

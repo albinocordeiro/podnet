@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package replicaapi;
+
+message Transaction {
+    bytes data=1;
+}
+
+message VoteRecord {
+    Transaction tx=1;
+    uint64 ts=2;
+    uint64 sn=3;
+    bytes sig=4;
+}
+
+message Vote {
+  uint64 replica_id = 1;
+  uint64 timestamp = 2;
+  uint64 sequence_number = 3;
+  bytes signature = 4;
+  Transaction transaction = 5;
+}
