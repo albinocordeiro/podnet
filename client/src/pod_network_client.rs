@@ -9,10 +9,7 @@ use crate::client_api_service::start_api_server;
 use crate::replica_comms_service::start_replica_comms_service;
 use crate::pod_data_updater::start_pod_data_updater;
 
-use crate::{
-    Replica, ReplicaId, SequenceNumber, Timestamp,
-};
-use crate::clientapi::{Transaction, Vote};
+use crate::Replica;
 pub const CHANNEL_SIZE: usize = 100;
 
 /// Initializes the pod network client with the given replicas list and configuration parameters.
