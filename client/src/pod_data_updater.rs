@@ -63,53 +63,63 @@ pub async fn start_pod_data_updater(
         }
 
         {
-            let mut nextsn = nextsn.write().await;
-            let Some(nxtsn) = nextsn.get_mut(&replica_id) else {
+            let mut nextsn_lock = nextsn.write().await;
+            let Some(nextsn) = nextsn_lock.get_mut(&replica_id) else {
                 bail!("Bad initialization: Next sequence number not found for replica id: {}", &replica_id);
             };
 
-            // Check if the vote sequence number matches the expected next sequence number
-            if sequence_number < *nxtsn {
+            if sequence_number < *nextsn {
                 // Vote is too old, discard it
                 warn!("Received outdated vote with sequence number {} from replica {}, expected {}. Vote ignored.", 
-                    sequence_number, replica_id, *nxtsn);
+                    sequence_number, replica_id, *nextsn);
                 continue;
-            } else if sequence_number > *nxtsn {
+            } else if sequence_number > *nextsn {
                 // Vote is from the future, store it in the backlog
                 info!("Received future vote with sequence number {} from replica {}, expected {}. Adding to backlog.", 
-                    sequence_number, replica_id, *nxtsn);
+                    sequence_number, replica_id, *nextsn);
                 
                 // Ensure the replica has a backlog entry
                 if !backlog.contains_key(&replica_id) {
                     backlog.insert(replica_id, BTreeMap::new());
                 }
                 
-                // Store the vote in the backlog by sequence number
-                backlog.get_mut(&replica_id).unwrap().insert(sequence_number, vote);
+                // Add the vote to the backlog
+                if let Some(replica_backlog) = backlog.get_mut(&replica_id) {
+                    replica_backlog.insert(sequence_number, vote.clone());
+                }
+                
                 continue;
             }
             
-            // At this point, sequence_number == *nxtsn, so we process the vote
-            *nxtsn = *nxtsn + 1;
+            // At this point, sequence_number == *nextsn, so we process the vote
+            *nextsn = *nextsn + 1;
         }
         
         // Process the vote - get a mrt write lock before processing
         {
             let mut mrt_lock = mrt.write().await;
-            process_vote(replica_id, &transaction, timestamp, &mut mrt_lock, &tsps).await?;
+            process_vote(replica_id, &transaction, timestamp, &mut mrt_lock, &tsps, ts_vote_msg.clone(), vote.clone()).await?;
         }
         
         // Try to process votes from the backlog for this replica
         if let Some(replica_backlog) = backlog.get_mut(&replica_id) {
             // Process consecutive sequence numbers from the backlog
             while let Some((&next_seq, _)) = replica_backlog.first_key_value() {
-                if next_seq == *nxtsn {
+                let mut nextsn_lock = nextsn.write().await;
+                let Some(nextsn) = nextsn_lock.get_mut(&replica_id) else {
+                    bail!("Bad initialization: Next sequence number not found for replica id: {}", &replica_id);
+                };
+                
+                if next_seq == *nextsn {
                     // We have the next expected vote in the backlog
                     let backlogged_vote = replica_backlog.remove(&next_seq).unwrap();
                     info!("Processing backlogged vote with sequence number {} from replica {}", next_seq, replica_id);
                     
                     // Increment the next sequence number
-                    *nxtsn = *nxtsn + 1;
+                    *nextsn = *nextsn + 1;
+                    
+                    // We need to drop the lock before processing the vote to avoid deadlocks
+                    drop(nextsn_lock);
                     
                     // Extract vote data
                     let backlogged_transaction = match &backlogged_vote.transaction {
@@ -124,7 +134,7 @@ pub async fn start_pod_data_updater(
                     {
                         let mut mrt_lock = mrt.write().await;
                         process_vote(replica_id, backlogged_transaction, 
-                                   backlogged_vote.timestamp, &mut mrt_lock, &tsps).await?;
+                                   backlogged_vote.timestamp, &mut mrt_lock, &tsps, ts_vote_msg.clone(), backlogged_vote.clone()).await?;
                     }
                 } else {
                     // No more consecutive votes in the backlog
