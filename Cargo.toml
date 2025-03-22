@@ -1,5 +1,5 @@
 [workspace]
-members = ["client", "pod", "common"]
+members = ["client", "pod", "common", "nethammer"]
 resolver = "2"
 
 [workspace.dependencies]
